@@ -23,6 +23,6 @@ def test_checkout_fails_with_empty_cart():
     logging.info("TestRail ID: 1613 - Checkout with empty cart started")
 
     cart = []
-    assert 1 == 2   # ✅ Proper failure
+    assert 1 == 2
 
     logging.info("TestRail ID: 1613 - Checkout with empty cart completed")
