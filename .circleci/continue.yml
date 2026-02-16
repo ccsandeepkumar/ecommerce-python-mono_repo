@@ -23,21 +23,40 @@ jobs:
             pip install pytest
 
       - run:
-          name: Run Filtered Tests
+          name: Run Filtered Tests (Safe Mode)
           command: |
             mkdir -p test-results
+            EXIT_CODE=0
 
-            if [ -s filtered_list.txt ]; then
-              echo "Running filtered tests:"
-              cat filtered_list.txt
-
-              pytest $(cat filtered_list.txt) \
-                --junitxml=test-results/results.xml \
-                -v | tee test-results/pytest.log
-            else
+            if [ ! -s filtered_list.txt ]; then
               echo "filtered_list.txt is empty. Failing build."
               exit 1
             fi
+
+            echo "Running filtered tests:"
+            cat filtered_list.txt
+            echo "------------------------------------"
+
+            while read testfile; do
+              if [ -n "$testfile" ]; then
+                echo ""
+                echo "Running $testfile"
+                echo "------------------------------------"
+
+                pytest "$testfile" \
+                  --continue-on-collection-errors \
+                  --junitxml="test-results/$(basename $testfile).xml" \
+                  -v | tee -a test-results/pytest.log
+
+                if [ ${PIPESTATUS[0]} -ne 0 ]; then
+                  EXIT_CODE=1
+                fi
+              fi
+            done < filtered_list.txt
+
+            echo ""
+            echo "Final Exit Code: $EXIT_CODE"
+            exit $EXIT_CODE
 
       - store_test_results:
           path: test-results
