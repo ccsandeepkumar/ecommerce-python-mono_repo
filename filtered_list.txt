@@ -1,2 +1,2 @@
 tests/integration/test_integration_in/test_code.py
-tests/integration/test_cart_checkout_flow.py
+tests/test_sample.py
