@@ -1,5 +1,10 @@
 version: 2.1
 
+parameters:
+  run_pipeline:
+    type: boolean
+    default: false
+
 jobs:
   filtered-tests:
     docker:
@@ -21,9 +26,16 @@ jobs:
           name: Run Filtered Tests
           command: |
             mkdir -p test-results
-            pytest $(cat filtered_list.txt) \
-              --junitxml=test-results/results.xml \
-              -v
+            if [ -s filtered_list.txt ]; then
+              echo "Running filtered tests:"
+              cat filtered_list.txt
+              pytest $(cat filtered_list.txt) \
+                --junitxml=test-results/results.xml \
+                -v
+            else
+              echo "No tests found in filtered_list.txt"
+              exit 1
+            fi
 
       - store_test_results:
           path: test-results
@@ -34,5 +46,6 @@ jobs:
 workflows:
   version: 2
   run-tests:
+    when: << pipeline.parameters.run_pipeline >>
     jobs:
       - filtered-tests
