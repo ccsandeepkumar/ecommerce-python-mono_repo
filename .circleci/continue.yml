@@ -1,0 +1,38 @@
+version: 2.1
+
+jobs:
+  filtered-tests:
+    docker:
+      - image: cimg/python:3.10
+
+    working_directory: ~/project
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install pytest
+
+      - run:
+          name: Run Filtered Tests
+          command: |
+            mkdir -p test-results
+            pytest $(cat filtered_list.txt) \
+              --junitxml=test-results/results.xml \
+              -v
+
+      - store_test_results:
+          path: test-results
+
+      - store_artifacts:
+          path: test-results
+
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - filtered-tests
