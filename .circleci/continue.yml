@@ -23,8 +23,10 @@ jobs:
             pip install pytest
 
       - run:
-          name: Run Filtered Tests (Safe Mode)
+          name: Run Filtered Tests (Force Continue Mode)
           command: |
+            set +e   # 🔥 disable immediate exit on error
+
             mkdir -p test-results
             EXIT_CODE=0
 
@@ -48,7 +50,10 @@ jobs:
                   --junitxml="test-results/$(basename $testfile).xml" \
                   -v | tee -a test-results/pytest.log
 
-                if [ ${PIPESTATUS[0]} -ne 0 ]; then
+                TEST_EXIT=${PIPESTATUS[0]}
+
+                if [ $TEST_EXIT -ne 0 ]; then
+                  echo "Test failed in $testfile"
                   EXIT_CODE=1
                 fi
               fi
@@ -56,6 +61,7 @@ jobs:
 
             echo ""
             echo "Final Exit Code: $EXIT_CODE"
+
             exit $EXIT_CODE
 
       - store_test_results:
