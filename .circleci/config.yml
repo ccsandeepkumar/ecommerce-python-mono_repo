@@ -1,0 +1,70 @@
+version: 2.1
+
+jobs:
+  filtered-tests:
+    docker:
+      - image: cimg/python:3.10
+
+    working_directory: ~/project
+
+    steps:
+      - checkout
+
+      # Restore pip cache
+      - restore_cache:
+          keys:
+            - v1-pip-{{ checksum "requirements.txt" }}
+            - v1-pip-
+
+      # Install dependencies
+      - run:
+          name: Install Dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install pytest
+
+      # Save pip cache
+      - save_cache:
+          paths:
+            - ~/.cache/pip
+          key: v1-pip-{{ checksum "requirements.txt" }}
+
+      # Print filtered list
+      - run:
+          name: Display Filtered Test List
+          command: |
+            echo "================================="
+            echo "Tests from filtered_list.txt:"
+            echo "================================="
+            cat filtered_list.txt
+
+      # Execute only filtered tests
+      - run:
+          name: Run Filtered Tests
+          command: |
+            mkdir -p test-results
+
+            if [ -f filtered_list.txt ] && [ -s filtered_list.txt ]; then
+              echo "Running selected tests..."
+              pytest $(cat filtered_list.txt) \
+                --junitxml=test-results/results.xml \
+                -v
+            else
+              echo "No tests specified."
+              echo "<testsuite></testsuite>" > test-results/results.xml
+            fi
+
+      # Store test results for CircleCI Test tab
+      - store_test_results:
+          path: test-results
+
+      # Store artifacts (downloadable)
+      - store_artifacts:
+          path: test-results
+
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - filtered-tests
