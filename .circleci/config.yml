@@ -1,12 +1,16 @@
 version: 2.1
-
 setup: true
 
 orbs:
+  path-filtering: circleci/path-filtering@0.1.4
   continuation: circleci/continuation@0.3.1
 
 workflows:
   setup-workflow:
     jobs:
-      - continuation/continue:
-          configuration_path: .circleci/continue.yml
+      - path-filtering/filter:
+          name: check-changes
+          base-revision: main
+          config-path: .circleci/continue.yml
+          mapping: |
+            filtered_list.txt run_pipeline true
