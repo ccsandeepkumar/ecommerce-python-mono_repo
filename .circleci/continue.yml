@@ -26,14 +26,16 @@ jobs:
           name: Run Filtered Tests
           command: |
             mkdir -p test-results
+
             if [ -s filtered_list.txt ]; then
               echo "Running filtered tests:"
               cat filtered_list.txt
+
               pytest $(cat filtered_list.txt) \
                 --junitxml=test-results/results.xml \
-                -v
+                -v | tee test-results/pytest.log
             else
-              echo "No tests found in filtered_list.txt"
+              echo "filtered_list.txt is empty. Failing build."
               exit 1
             fi
 
